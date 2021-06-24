@@ -48,6 +48,9 @@ func EnableInheritOldMosnconfig(enable bool) {
 	enableInheritOldMosnconfig = enable
 }
 
+/**
+ * 启动一个新的mosn
+ */
 func startNewMosn() error {
 	execSpec := &syscall.ProcAttr{
 		Env:   os.Environ(),
@@ -138,6 +141,10 @@ func reconfigure(start bool) {
 	os.Exit(0)
 }
 
+/**
+ * 1.旧 mosn 向 reconfig.sock 发起连接。
+ * 2.旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组。
+ */
 func ReconfigureHandler() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -148,6 +155,7 @@ func ReconfigureHandler() {
 
 	syscall.Unlink(types.ReconfigureDomainSocket)
 
+	// reconfig.sock
 	l, err := net.Listen("unix", types.ReconfigureDomainSocket)
 	if err != nil {
 		log.StartLogger.Errorf("[server] [reconfigure] reconfigureHandler net listen error: %v", err)
@@ -166,6 +174,7 @@ func ReconfigureHandler() {
 		}
 		log.DefaultLogger.Infof("[server] [reconfigure] reconfigureHandler Accept")
 
+		// 1.旧 mosn 向 reconfig.sock 发起连接
 		_, err = uc.Write([]byte{0})
 		if err != nil {
 			log.DefaultLogger.Errorf("[server] [reconfigure] reconfigureHandler %v", err)
@@ -173,6 +182,7 @@ func ReconfigureHandler() {
 		}
 		uc.Close()
 
+		// 2.旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组
 		reconfigure(false)
 	}
 }
@@ -181,9 +191,14 @@ func StopReconfigureHandler() {
 	syscall.Unlink(types.ReconfigureDomainSocket)
 }
 
+/**
+ * 新 mosn 通过连接 unix socket reconfig.sock，判断能否读取到数据。
+ * 旧 mosn 会监听 reconfig.sock，在有连接进来时发送数据。
+ */
 func isReconfigure() bool {
 	var unixConn net.Conn
 	var err error
+	// reconfig.sock
 	unixConn, err = net.DialTimeout("unix", types.ReconfigureDomainSocket, 1*time.Second)
 	if err != nil {
 		log.DefaultLogger.Infof("[server] [reconfigure] not reconfigure: %v", err)

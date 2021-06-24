@@ -135,10 +135,13 @@ var (
 				metrics.SetVersion(Version)
 				metrics.SetGoVersion(runtime.Version())
 			})
+
 			// pre-startup
 			stm.AppendPreStartStage(mosn.DefaultPreStartStage) // called finally stage by default
+
 			// startup
 			stm.AppendStartStage(mosn.DefaultStartStage)
+
 			// execute all runs
 			stm.Run()
 
@@ -184,6 +187,7 @@ func DefaultParamsParsed(c *cli.Context) {
 		log.StartLogger.Infof("[mosn] [start] parse feature-gates flag fail : %+v", err)
 		os.Exit(1)
 	}
+
 	// istio parameters
 	serviceCluster := c.String("service-cluster")
 	serviceNode := c.String("service-node")

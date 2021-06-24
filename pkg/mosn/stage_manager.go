@@ -102,6 +102,9 @@ func (stm *StageManager) AppendInitStage(f func(*v2.MOSNConfig)) *StageManager {
 	return stm
 }
 
+/**
+ * 初始化阶段
+ */
 func (stm *StageManager) runInitStage() time.Duration {
 	st := time.Now()
 	for _, f := range stm.initStages {
@@ -151,7 +154,7 @@ func (stm *StageManager) runStartStage() time.Duration {
 // Run blocks until the mosn is closed
 func (stm *StageManager) Run() {
 	stm.started = true
-	//
+
 	log.StartLogger.Infof("mosn parameters parsed cost: %v", stm.runParamsParsedStage())
 	log.StartLogger.Infof("mosn init cost: %v", stm.runInitStage())
 	log.StartLogger.Infof("mosn prepare to start cost: %v", stm.runPreStartStage())

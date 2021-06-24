@@ -90,6 +90,7 @@ func newMosnApp(startCmd *cli.Command) *cli.App {
 	app.Usage = "MOSN is modular observable smart netstub."
 	app.Flags = cmdStart.Flags
 
+	// 命令
 	//commands
 	app.Commands = []cli.Command{
 		cmdStart,

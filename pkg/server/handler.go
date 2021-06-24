@@ -860,6 +860,9 @@ func SendInheritConfig() error {
 	return nil
 }
 
+/**
+ * 获取 old mosn 继承过来的监听器
+ */
 func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -867,12 +870,14 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 		}
 	}()
 
+	// 判断能否读取到 old mosn 的数据
 	if !isReconfigure() {
 		return nil, nil, nil, nil
 	}
 
 	syscall.Unlink(types.TransferListenDomainSocket)
 
+	// listen.sock
 	l, err := net.Listen("unix", types.TransferListenDomainSocket)
 	if err != nil {
 		log.StartLogger.Errorf("[server] InheritListeners net listen error: %v", err)

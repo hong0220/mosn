@@ -608,7 +608,10 @@ type stream struct {
 	ctx              context.Context
 
 	// NOTICE: fasthttp ctx and its member not allowed holding by others after request handle finished
-	request  *fasthttp.Request
+
+	// 请求报文
+	request *fasthttp.Request
+	// 响应报文
 	response *fasthttp.Response
 
 	receiver types.StreamReceiveListener

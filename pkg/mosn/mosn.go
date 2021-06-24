@@ -35,6 +35,7 @@ import (
 	"mosn.io/pkg/utils"
 )
 
+// 平滑升级使用的数据
 // UpgradeData stores datas that are used to smooth upgrade
 type UpgradeData struct {
 	InheritListeners  []net.Listener
@@ -43,10 +44,15 @@ type UpgradeData struct {
 }
 
 type Mosn struct {
-	Upgrade        UpgradeData
+	// 实现 MOSN 的平滑升级和重启
+	Upgrade UpgradeData
+	// 集群管理器
+	// cluster 指得是 MOSN 连接到的一组逻辑上相似的上游主机
 	Clustermanager types.ClusterManager
-	RouterManager  types.RouterManager
-	Config         *v2.MOSNConfig
+	// 路由管理器
+	// MOSN 根据路由规则来对请求进行代理
+	RouterManager types.RouterManager
+	Config        *v2.MOSNConfig
 	// internal data
 	servers   []server.Server
 	xdsClient *xds.Client
@@ -75,14 +81,19 @@ func (m *Mosn) upgradeCheck() {
 	server.EnableInheritOldMosnconfig(c.InheritOldMosnconfig)
 
 	var err error
+
+	// 开启优雅升级
 	// default is graceful mode, turn graceful off by set it to false
 	if !c.CloseGraceful {
-		//get inherit fds
+		// 获取继承过来的监听器
+		// get inherit fds
 		m.Upgrade.InheritListeners, m.Upgrade.InheritPacketConn, m.Upgrade.ListenSockConn, err = server.GetInheritListeners()
 		if err != nil {
 			log.StartLogger.Errorf("[mosn] [NewMosn] getInheritListeners failed, exit")
 		}
 	}
+
+	// 不为空，表示热升级/重启
 	if m.Upgrade.ListenSockConn != nil {
 		log.StartLogger.Infof("[mosn] [NewMosn] active reconfiguring")
 		// set Mosn Active_Reconfiguring
@@ -101,13 +112,12 @@ func (m *Mosn) upgradeCheck() {
 			c.ClusterManager = oldMosnConfig.ClusterManager
 			c.Extends = oldMosnConfig.Extends
 		}
-	} else {
+	} else { // 为空，表示普通启动
 		log.StartLogger.Infof("[mosn] [NewMosn] new mosn created")
 		// start init services
 		if err := store.StartService(nil); err != nil {
 			log.StartLogger.Fatalf("[mosn] [NewMosn] start service failed: %v,  exit", err)
 		}
-
 	}
 }
 
@@ -297,6 +307,7 @@ func (m *Mosn) Start() {
 		configmanager.DumpConfigHandler()
 	}, nil)
 
+	// 开启优雅升级
 	if !m.Config.CloseGraceful {
 		// start reconfig domain socket
 		utils.GoWithRecover(func() {
