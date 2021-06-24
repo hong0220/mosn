@@ -77,6 +77,7 @@ func NewServer(config *Config, cmFilter types.ClusterManagerFilter, clMng types.
 
 	keeper.OnProcessShutDown(log.CloseAll)
 
+	// 初始化
 	server := &server{
 		serverName: config.ServerName,
 		stopChan:   make(chan struct{}),

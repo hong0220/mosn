@@ -765,6 +765,9 @@ func (ac *activeConnection) OnEvent(event api.ConnectionEvent) {
 	}
 }
 
+/**
+ * 旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组
+ */
 func sendInheritListeners() (net.Conn, error) {
 	lf := ListListenersFile()
 	if lf == nil {
@@ -793,8 +796,11 @@ func sendInheritListeners() (net.Conn, error) {
 
 	var unixConn net.Conn
 	var err error
+
+	// 重试10次
 	// retry 10 time
 	for i := 0; i < 10; i++ {
+		// listen.sock
 		unixConn, err = net.DialTimeout("unix", types.TransferListenDomainSocket, 1*time.Second)
 		if err == nil {
 			break
@@ -875,6 +881,9 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 		return nil, nil, nil, nil
 	}
 
+	// unlink 系统调用比较特殊。关于它的描述中有一点：
+	// 如果这个文件是一个 unix socket，它会被移除，但是打开它的进程可以继续使用它。
+	// 也就是说新旧 mosn 都会在这个地址监听。
 	syscall.Unlink(types.TransferListenDomainSocket)
 
 	// listen.sock
@@ -911,6 +920,8 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 		log.StartLogger.Errorf("[server] expected 1 SocketControlMessage; got scms = %#v", scms)
 		return nil, nil, nil, err
 	}
+
+	// 解析从另一个进程传来的socket控制消息：打开的文件描述符的整型数组
 	gotFds, err := unix.ParseUnixRights(&scms[0])
 	if err != nil {
 		log.StartLogger.Errorf("[server] unix.ParseUnixRights: %v", err)
@@ -919,6 +930,7 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 
 	var listeners []net.Listener
 	var packetConn []net.PacketConn
+
 	for i := 0; i < len(gotFds); i++ {
 		fd := uintptr(gotFds[i])
 		file := os.NewFile(fd, "")

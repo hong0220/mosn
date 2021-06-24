@@ -89,6 +89,8 @@ func reconfigure(start bool) {
 	var err error
 	var n int
 	var buf [1]byte
+
+	// 旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组
 	if listenSockConn, err = sendInheritListeners(); err != nil {
 		return
 	}
@@ -103,8 +105,10 @@ func reconfigure(start bool) {
 		}
 	}
 
+	// 该连接在旧 mosn 中保持10分钟
 	// Wait new mosn parse configuration
 	listenSockConn.SetReadDeadline(time.Now().Add(10 * time.Minute))
+
 	n, err = listenSockConn.Read(buf[:])
 	if n != 1 {
 		log.DefaultLogger.Alertf(types.ErrorKeyReconfigure, "[old mosn] [read ack] new mosn start failed")
