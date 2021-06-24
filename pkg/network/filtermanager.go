@@ -109,6 +109,9 @@ func (fm *filterManager) onContinueReading(filter *activeReadFilter) {
 	}
 }
 
+/**
+ * filter manager 是 filters 的代理，外部会在不同阶段调用 filter manager 的不同函数，filter manager 管理 filters 的执行逻辑。
+ */
 func (fm *filterManager) OnRead() {
 	fm.onContinueReading(nil)
 }

@@ -196,7 +196,7 @@ func StopReconfigureHandler() {
 }
 
 /**
- * 新 mosn 通过连接 unix socket reconfig.sock，判断能否读取到数据。
+ * 新 mosn 通过连接 unix socket reconfig.sock，判断能否读取到 old mosn 的数据。
  * 旧 mosn 会监听 reconfig.sock，在有连接进来时发送数据。
  */
 func isReconfigure() bool {

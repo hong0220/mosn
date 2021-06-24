@@ -48,11 +48,17 @@ func init() {
 		mutex:    sync.Mutex{},
 		managers: make(map[string]log.ErrorLogger),
 	}
+
+	// 记录 mosn 启动的日志信息
 	// use console as start logger
 	StartLogger, _ = GetOrCreateDefaultErrorLogger("", log.INFO)
+
 	// default as start before Init
 	log.DefaultLogger = StartLogger
+
+	// 记录MOSN启动之后的运行日志信息，，默认和 StartLogger 一样，可以通过配使用配置文件覆盖默认配置
 	DefaultLogger = log.DefaultLogger
+
 	// default proxy logger for test, override after config parsed
 	log.DefaultContextLogger, _ = CreateDefaultContextLogger("", log.INFO)
 	Proxy = log.DefaultContextLogger
@@ -173,6 +179,7 @@ func GetOrCreateDefaultErrorLogger(p string, level log.Level) (log.ErrorLogger, 
 
 // InitDefaultLogger inits a default logger
 func InitDefaultLogger(output string, level log.Level) (err error) {
+	// 通过配使用配置文件覆盖默认配置
 	DefaultLogger, err = GetOrCreateDefaultErrorLogger(output, level)
 	if err != nil {
 		return err
