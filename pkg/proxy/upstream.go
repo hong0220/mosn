@@ -155,7 +155,7 @@ func (r *upstreamRequest) OnDecodeError(context context.Context, err error, head
 	r.OnResetStream(types.StreamLocalReset)
 }
 
-// ~~~ send request wrapper
+// send request wrapper
 func (r *upstreamRequest) appendHeaders(endStream bool) {
 	if r.downStream.processDone() {
 		return

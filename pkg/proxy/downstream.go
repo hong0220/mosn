@@ -683,6 +683,9 @@ func (s *downStream) receive(ctx context.Context, id uint32, phase types.Phase) 
 	return types.End
 }
 
+/**
+ * 路由匹配
+ */
 func (s *downStream) matchRoute() {
 	headers := s.downstreamReqHeaders
 	if s.proxy.routersWrapper == nil || s.proxy.routersWrapper.GetRouters() == nil {
@@ -694,6 +697,7 @@ func (s *downStream) matchRoute() {
 
 	// get router instance and do routing
 	routers := s.proxy.routersWrapper.GetRouters()
+
 	// call route handler to get route info
 	s.snapshot, s.route = s.proxy.routeHandlerFactory.DoRouteHandler(s.context, headers, routers, s.proxy.clusterManager)
 }

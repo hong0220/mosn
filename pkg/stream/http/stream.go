@@ -48,6 +48,7 @@ import (
 )
 
 func init() {
+	// 注册http协议处理工厂
 	str.Register(protocol.HTTP1, &streamConnFactory{})
 	protocol.RegisterProtocolConfigHandler(protocol.HTTP1, streamConfigHandler)
 }
@@ -482,6 +483,7 @@ func (conn *serverStreamConnection) serve() {
 	for {
 		// 1. pre alloc stream-level ctx with bufferCtx
 		ctx := conn.contextManager.Get()
+		// 通过 sync.Pool 实现实现内存复用
 		buffers := httpBuffersByContext(ctx)
 		request := &buffers.serverRequest
 
@@ -504,6 +506,7 @@ func (conn *serverStreamConnection) serve() {
 				request.Header.Del("Expect")
 			}
 		}
+		// 读取错误处理
 		if err != nil {
 			// ErrNothingRead is returned that means just a keep-alive connection
 			// closing down either because the remote closed it or because
@@ -524,6 +527,7 @@ func (conn *serverStreamConnection) serve() {
 		id := protocol.GenerateID()
 		s := &buffers.serverStream
 
+		// 请求处理
 		// 4. request processing
 		s.stream = stream{
 			id:       id,
@@ -542,6 +546,7 @@ func (conn *serverStreamConnection) serve() {
 				span = tracer.Start(ctx, s.header, time.Now())
 			}
 		}
+		// 上下文注入链式追踪信息
 		s.stream.ctx = s.connection.contextManager.InjectTrace(ctx, span)
 
 		if log.Proxy.GetLogLevel() >= log.DEBUG {

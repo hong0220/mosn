@@ -70,7 +70,9 @@ func NewMosn(c *v2.MOSNConfig) *Mosn {
 	}
 	// generate mosn structure members
 	m.upgradeCheck()
+
 	m.initClusterManager()
+
 	m.initServer()
 
 	return m
@@ -203,15 +205,20 @@ func (m *Mosn) initServer() {
 					log.StartLogger.Fatalf("[mosn] [NewMosn] compatible router: %v", err)
 				}
 				if deprecatedRouter.RouterConfigName != "" {
+					// 使配置生效
 					m.RouterManager.AddOrUpdateRouters(deprecatedRouter)
 				}
 				if _, err := srv.AddListener(lc); err != nil {
 					log.StartLogger.Fatalf("[mosn] [NewMosn] AddListener error:%s", err.Error())
 				}
 			}
+
+			// 后解析的 Routers 配置如果与 Listener 中的配置同名，则会通过 Update 覆盖掉 Listener 中的配置。
+
 			// Add Router Config
 			for _, routerConfig := range serverConfig.Routers {
 				if routerConfig.RouterConfigName != "" {
+					// 使配置生效
 					m.RouterManager.AddOrUpdateRouters(routerConfig)
 				}
 			}

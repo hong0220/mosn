@@ -55,12 +55,19 @@ type Routers interface {
 
 // RouterManager is a manager for all routers' config
 type RouterManager interface {
+	// 使用一个完整的路由配置，对路由进行更新
 	// AddOrUpdateRouters used to add or update router
 	AddOrUpdateRouters(routerConfig *v2.RouterConfiguration) error
+
+	// 路由选择
 	// GetRouterWrapperByName returns a router wrapper from manager
 	GetRouterWrapperByName(routerConfigName string) RouterWrapper
+
+	// 追加路由匹配规则
 	// AddRoute adds a single router rule into specified virtualhost(by domain)
 	AddRoute(routerConfigName, domain string, route *v2.Router) error
+
+	// 删除路由匹配规则
 	// RemoveAllRoutes clear all of the specified virtualhost's routes
 	RemoveAllRoutes(routerConfigName, domain string) error
 }

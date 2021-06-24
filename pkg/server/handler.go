@@ -931,6 +931,7 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 	var listeners []net.Listener
 	var packetConn []net.PacketConn
 
+	// 文件描述符转换成listener
 	for i := 0; i < len(gotFds); i++ {
 		fd := uintptr(gotFds[i])
 		file := os.NewFile(fd, "")
@@ -946,7 +947,6 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 			if err == nil {
 				packetConn = append(packetConn, pc)
 			} else {
-
 				log.StartLogger.Errorf("[server] recover listener from fd %d failed: %s", fd, err)
 				return nil, nil, nil, err
 			}
