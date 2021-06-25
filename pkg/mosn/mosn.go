@@ -218,7 +218,7 @@ func (m *Mosn) initServer() {
 			// Add Router Config
 			for _, routerConfig := range serverConfig.Routers {
 				if routerConfig.RouterConfigName != "" {
-					// 使配置生效
+					// 使路由配置生效
 					m.RouterManager.AddOrUpdateRouters(routerConfig)
 				}
 			}
@@ -253,6 +253,7 @@ func (m *Mosn) TransferConnection() {
 
 		// transfer old mosn connections
 		utils.GoWithRecover(func() {
+			// new mosn 接收 old mosn 的长连接迁移
 			network.TransferServer(m.servers[0].Handler())
 		}, nil)
 	} else {

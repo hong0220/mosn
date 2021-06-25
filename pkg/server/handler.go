@@ -876,7 +876,7 @@ func GetInheritListeners() ([]net.Listener, []net.PacketConn, net.Conn, error) {
 		}
 	}()
 
-	// 判断能否读取到 old mosn 的数据
+	// 监听reconfig.sock，判断是否存在一个old mosn，否则是正常的启动流程
 	if !isReconfigure() {
 		return nil, nil, nil, nil
 	}

@@ -395,6 +395,7 @@ func (c *connection) startReadLoop() {
 				}
 			} else {
 				if transferTime.Before(time.Now()) {
+					// 旧 mosn 发送长连接
 					c.transfer()
 					return
 				}
@@ -407,7 +408,9 @@ func (c *connection) startReadLoop() {
 			return
 		case <-c.readEnabledChan:
 		default:
+			// readEnabled 默认为true
 			if c.readEnabled {
+				// 真正的读取数据逻辑
 				err := c.doRead()
 				if err != nil {
 					if te, ok := err.(net.Error); ok && te.Timeout() {
@@ -448,8 +451,11 @@ func (c *connection) startReadLoop() {
 }
 
 func (c *connection) transfer() {
+	// 暂停 write 操作
 	c.notifyTransfer()
+	// 简单的读迁移协议, 主要包括TCP 原始数据长度，TLS 数据长度，TCP 原始数据，TLS 数据。
 	id, _ := transferRead(c)
+	// 残留响应迁移，把需要 write 的数据包和之前 New MOSN 传回来的 Connection ID 一并传给 New MOSN。
 	c.transferWrite(id)
 }
 
@@ -465,6 +471,9 @@ func (c *connection) notifyTransfer() {
 	}
 }
 
+/**
+ * 残留响应迁移，把需要 write 的数据包和之前 New MOSN 传回来的 Connection ID 一并传给 New MOSN。
+ */
 func (c *connection) transferWrite(id uint64) {
 	log.DefaultLogger.Infof("[network] TransferWrite begin")
 	for {
@@ -476,6 +485,7 @@ func (c *connection) transferWrite(id uint64) {
 				return
 			}
 			c.appendBuffer(buf)
+			// 构造一个简单的写迁移协议, 主要包括TCP原始数据长度, connection ID，TCP原始数据。
 			transferWrite(c, id)
 		}
 	}
@@ -491,6 +501,7 @@ func (c *connection) setReadDeadline() {
 }
 
 func (c *connection) doRead() (err error) {
+	// 为该连接创建一个buffer来保存读入的数据
 	if c.readBuffer == nil {
 		switch c.network {
 		case "udp":
@@ -503,8 +514,10 @@ func (c *connection) doRead() (err error) {
 
 	var bytesRead int64
 	c.setReadDeadline()
+	// 从连接中读取数据，返回实际读取到的字节数，rawConnection为原始连接
 	bytesRead, err = c.readBuffer.ReadOnce(c.rawConnection)
 
+	// 进行读取字节函数的回调，可以进行数据统计
 	if err != nil {
 		if atomic.LoadUint32(&c.closed) == 1 {
 			return err
@@ -521,6 +534,7 @@ func (c *connection) doRead() (err error) {
 		}
 	}
 
+	// 没有读取到数据
 	//todo: ReadOnce maybe always return (0, nil) and causes dead loop (hack)
 	if bytesRead == 0 && err == nil {
 		err = io.EOF
@@ -528,6 +542,7 @@ func (c *connection) doRead() (err error) {
 			c.id, c.rawConnection.LocalAddr(), c.RemoteAddr())
 	}
 
+	// 通知上层读取到新的数据
 	c.onRead(bytesRead)
 	return
 }

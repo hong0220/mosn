@@ -33,6 +33,7 @@ import (
 )
 
 func init() {
+	// 迁移监听套接字
 	keeper.AddSignalCallback(func() {
 		// reload, fork new mosn
 		reconfigure(true)
@@ -90,7 +91,7 @@ func reconfigure(start bool) {
 	var n int
 	var buf [1]byte
 
-	// 旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组
+	// 旧 mosn 向 listen.sock 发送要转移的 listen FD
 	if listenSockConn, err = sendInheritListeners(); err != nil {
 		return
 	}
@@ -146,7 +147,7 @@ func reconfigure(start bool) {
 }
 
 /**
- * 1.旧 mosn 向 reconfig.sock 发起连接。
+ * 1.旧 mosn 监听 reconfig.sock。
  * 2.旧 mosn 尝试向 listen.sock 发送要转移的 listener 数组。
  */
 func ReconfigureHandler() {
@@ -171,6 +172,7 @@ func ReconfigureHandler() {
 
 	ul := l.(*net.UnixListener)
 	for {
+		// 1.旧 mosn 监听 reconfig.sock
 		uc, err := ul.AcceptUnix()
 		if err != nil {
 			log.DefaultLogger.Errorf("[server] [reconfigure] reconfigureHandler Accept error :%v", err)
@@ -178,7 +180,7 @@ func ReconfigureHandler() {
 		}
 		log.DefaultLogger.Infof("[server] [reconfigure] reconfigureHandler Accept")
 
-		// 1.旧 mosn 向 reconfig.sock 发起连接
+		// 发送空请求
 		_, err = uc.Write([]byte{0})
 		if err != nil {
 			log.DefaultLogger.Errorf("[server] [reconfigure] reconfigureHandler %v", err)
@@ -196,8 +198,8 @@ func StopReconfigureHandler() {
 }
 
 /**
- * 新 mosn 通过连接 unix socket reconfig.sock，判断能否读取到 old mosn 的数据。
- * 旧 mosn 会监听 reconfig.sock，在有连接进来时发送数据。
+ * 新 mosn 通过连接 unix socket reconfig.sock，判断是否存在一个old mosn，否则是正常的启动流程
+ * 旧 mosn 会监听 reconfig.sock，在有连接进来时发送数据
  */
 func isReconfigure() bool {
 	var unixConn net.Conn
@@ -206,6 +208,7 @@ func isReconfigure() bool {
 	unixConn, err = net.DialTimeout("unix", types.ReconfigureDomainSocket, 1*time.Second)
 	if err != nil {
 		log.DefaultLogger.Infof("[server] [reconfigure] not reconfigure: %v", err)
+		// 正常的启动流程
 		return false
 	}
 	defer unixConn.Close()

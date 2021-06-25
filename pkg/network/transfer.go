@@ -53,6 +53,9 @@ func SetTransferTimeout(time time.Duration) {
 	}
 }
 
+/**
+ * new mosn 接收 old mosn 的长连接迁移
+ */
 // TransferServer is called on new mosn start
 func TransferServer(handler types.ConnectionHandler) {
 	defer func() {
@@ -64,6 +67,7 @@ func TransferServer(handler types.ConnectionHandler) {
 	defer store.SetMosnState(store.Running)
 
 	syscall.Unlink(types.TransferConnDomainSocket)
+	// 监听conn.sock
 	l, err := net.Listen("unix", types.TransferConnDomainSocket)
 	if err != nil {
 		log.DefaultLogger.Errorf("[network] [transfer] [server] transfer net listen error %v", err)
@@ -126,6 +130,7 @@ func transferHandler(c net.Conn, handler types.ConnectionHandler, transferMap *s
 			log.DefaultLogger.Errorf("[network] [transfer] [handler] transferRecvData error :%v", err)
 			return
 		}
+		// 把 Old MOSN 传递过来的 FD 和数据包重新生成一个新的 Connection 结构体，并把生成的新的 connection ID 传递给 Old MOSN
 		connection := transferNewConn(conn, dataBuf, tlsBuf, handler, transferMap)
 		if connection != nil {
 			transferSendID(uc, connection.id)
@@ -192,6 +197,9 @@ func transferRead(c *connection) (uint64, error) {
 	return id, nil
 }
 
+/**
+ * 构造一个简单的写迁移协议, 主要包括TCP原始数据长度, connection ID，TCP原始数据。
+ */
 // old mosn transfer writeloop
 func transferWrite(c *connection, id uint64) error {
 	defer func() {

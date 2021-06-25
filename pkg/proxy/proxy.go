@@ -176,6 +176,7 @@ func (p *proxy) OnData(buf buffer.IoBuffer) api.FilterStatus {
 
 		p.serverStreamConn = stream.CreateServerStreamConnection(p.context, protocol, p.readCallbacks.Connection(), p)
 	}
+	// 把数据分发到对应协议的的解码器
 	p.serverStreamConn.Dispatch(buf)
 
 	return api.Stop
