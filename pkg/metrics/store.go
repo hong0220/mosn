@@ -110,6 +110,7 @@ func NewMetrics(typ string, labels map[string]string) (types.Metrics, error) {
 		registry:  gometrics.NewRegistry(),
 	}
 
+	// 赋值
 	defaultStore.metrics[name] = stats
 
 	return stats, nil
@@ -212,6 +213,7 @@ func (s *metrics) fullName(name string) string {
 func GetAll() (metrics []types.Metrics) {
 	defaultStore.mutex.RLock()
 	defer defaultStore.mutex.RUnlock()
+
 	metrics = make([]types.Metrics, 0, len(defaultStore.metrics))
 	for _, m := range defaultStore.metrics {
 		metrics = append(metrics, m)

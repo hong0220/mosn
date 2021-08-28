@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -80,6 +81,8 @@ func startTransferServer(tc *integrate.XTestCase) {
 }
 
 func TestTransfer(t *testing.T) {
+	fmt.Println("开始测试")
+
 	// todo: fix this?
 	// netpoll mode does not support transfer
 	if network.UseNetpollMode {
@@ -94,6 +97,7 @@ func TestTransfer(t *testing.T) {
 	tc.ServerMeshAddr = "127.0.0.1:12102"
 
 	if os.Getenv("_MOSN_TEST_TRANSFER") == "true" {
+		fmt.Println("启动一个mosn")
 		startTransferMesh(t, tc)
 		return
 	}

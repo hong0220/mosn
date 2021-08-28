@@ -136,6 +136,9 @@ func configDump(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/**
+ * 监控
+ */
 func statsDump(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		log.DefaultLogger.Alertf(types.ErrorKeyAdmin, "api: %s, error: invalid method: %s", "stats dump", r.Method)
