@@ -23,6 +23,18 @@ import (
 	"mosn.io/mosn/test/util/mosn"
 )
 
+/**
+ * 测试方法：启动两个mosn。
+ * 测试判断：执行新 MOSN reload, 新 MOSN 可以正常重启，则认为是正常。
+ * 测试日志：
+ * 2020-11-02 19:58:03,768 [INFO] [server] Get InheritListeners start
+ * 2020-11-02 19:58:04,769 [INFO] [server] Get InheritListeners Accept
+ * 2020-11-02 19:58:04,769 [INFO] [mosn] [NewMosn] active reconfiguring
+ * ...
+ * 2021-08-28 14:40:04,422 [INFO] [mosn start] mosn start server
+ * todo 测试连绵不断的数据
+ */
+
 // client - mesh - mesh - server
 func forkTransferMesh(tc *integrate.XTestCase) int {
 	// Set a flag for the new process start process
@@ -42,6 +54,9 @@ func forkTransferMesh(tc *integrate.XTestCase) int {
 	return pid
 }
 
+/**
+ * 启动一个mosn
+ */
 func startTransferMesh(t *testing.T, tc *integrate.XTestCase) {
 	rand.Seed(3)
 	server.GracefulTimeout = 5 * time.Second
@@ -67,7 +82,9 @@ func startTransferMesh(t *testing.T, tc *integrate.XTestCase) {
 
 	log.InitDefaultLogger("./transfer.log", log.DEBUG)
 
+	// 启动mosn
 	mesh.Start()
+
 	time.Sleep(40 * time.Second)
 }
 
